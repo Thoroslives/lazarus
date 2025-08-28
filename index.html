@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recovery Portal (2-of-3)</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        margin: 2rem;
+        max-width: 980px;
+      }
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 0.25rem;
+      }
+      .muted {
+        color: #555;
+        font-size: 0.95rem;
+      }
+      .row {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      input[type="text"],
+      input[type="password"] {
+        width: 100%;
+        padding: 0.6rem 0.7rem;
+        border: 1px solid #bbb;
+        border-radius: 8px;
+        font-size: 0.95rem;
+      }
+      input[type="password"] {
+        letter-spacing: 0.2em;
+      }
+      button {
+        padding: 0.6rem 0.9rem;
+        border: 1px solid #222;
+        background: #fff;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      button.primary {
+        background: #111;
+        color: #fff;
+      }
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      .card {
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 1rem;
+      }
+      .ok {
+        color: #0a7f41;
+      }
+      .warn {
+        color: #b45309;
+      }
+      .err {
+        color: #b00020;
+      }
+      .mono {
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 0.9rem;
+      }
+      .small {
+        font-size: 0.9rem;
+      }
+      .hide {
+        display: none;
+      }
+    </style>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';
+               connect-src 'self' https://raw.githubusercontent.com https://rawcdn.githack.com https://*.backblazeb2.com https://f*.backblazeb2.com https://*.b2.cldnn.net https://YOUR-WORDPRESS-HOST; base-uri 'none'; form-action 'self'"
+    />
+  </head>
+  <body>
+    <h1>Recovery Portal (2-of-3)</h1>
+    <p class="muted">
+      All crypto is local in your browser. Nothing uploads. Use incognito on
+      public PCs. Prefer “Essentials”.
+    </p>
+
+    <div class="card">
+      <h3>Step 1 — File locations</h3>
+      <p class="small">
+        Enter URLs or choose files. You only need any
+        <strong>two</strong> shares.
+      </p>
+      <div class="grid">
+        <div>
+          <label class="small mono">share1.enc.json (x=1)</label>
+          <input
+            id="urlS1"
+            type="text"
+            placeholder="https://…/share1.enc.json"
+          />
+          <input id="fileS1" type="file" />
+        </div>
+        <div>
+          <label class="small mono">share2.enc.json (x=2)</label>
+          <input
+            id="urlS2"
+            type="text"
+            placeholder="https://…/share2.enc.json"
+          />
+          <input id="fileS2" type="file" />
+        </div>
+        <div>
+          <label class="small mono">share3.enc.json (x=3)</label>
+          <input
+            id="urlS3"
+            type="text"
+            placeholder="https://…/share3.enc.json"
+          />
+          <input id="fileS3" type="file" />
+        </div>
+        <div>
+          <label class="small mono">essentials.enc.json</label>
+          <input
+            id="urlEss"
+            type="text"
+            placeholder="https://…/essentials.enc.json"
+          />
+          <input id="fileEss" type="file" />
+        </div>
+      </div>
+      <details style="margin-top: 0.5rem">
+        <summary class="small">Optional: lifeboat.enc (full archive)</summary>
+        <input id="urlLB" type="text" placeholder="https://…/lifeboat.enc" />
+        <input id="fileLB" type="file" />
+      </details>
+      <div class="row" style="margin-top: 0.75rem">
+        <button id="useDefaults">Use defaults</button>
+        <span class="small"
+          >Defaults are compiled into this page. Host this same file on
+          WordPress & GitHub Pages.</span
+        >
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Step 2 — Enter your two PINs</h3>
+      <div class="grid">
+        <div>
+          <label class="small">PIN #1</label
+          ><input
+            id="pin1"
+            type="password"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+          />
+        </div>
+        <div>
+          <label class="small">PIN #2</label
+          ><input
+            id="pin2"
+            type="password"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+          />
+        </div>
+      </div>
+      <p class="small muted">Both PINs are required to open any share.</p>
+    </div>
+
+    <div class="card">
+      <h3>Step 3 — Recover</h3>
+      <div class="row">
+        <button class="primary" id="btnEss">Show essentials only</button>
+        <button id="btnLB">Download full archive</button>
+      </div>
+      <div id="status" class="small muted" style="margin-top: 0.5rem"></div>
+    </div>
+
+    <div id="out" class="card hide">
+      <h3>Essentials</h3>
+      <pre id="ess" class="mono"></pre>
+      <p class="warn small">
+        Don’t linger on a public PC. Rotate anything you expose once you’re back
+        on your device.
+      </p>
+    </div>
+
+    <script>
+      "use strict";
+      const $ = (q) => document.querySelector(q);
+      function status(msg, cls) {
+        const el = $("#status");
+        el.textContent = msg;
+        el.className = "small " + (cls || "muted");
+      }
+      function b64ToBuf(b64) {
+        return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer;
+      }
+      function utf8(s) {
+        return new TextEncoder().encode(s).buffer;
+      }
+      async function fetchOrFile(urlEl, fileEl) {
+        if (fileEl.files && fileEl.files[0])
+          return new Uint8Array(await fileEl.files[0].arrayBuffer());
+        const u = urlEl.value.trim();
+        const r = await fetch(u, { cache: "no-store" });
+        if (!r.ok) throw new Error("Fetch failed: " + r.status);
+        return new Uint8Array(await r.arrayBuffer());
+      }
+
+      // Defaults — REPLACE with your URLs before publishing
+      const DEFAULTS = {
+        s1: "https://YOUR-WORDPRESS-HOST/path/share1.enc.json",
+        s2: "https://raw.githubusercontent.com/YOURUSER/YOURREPO/main/share2.enc.json",
+        s3: "https://f002.backblazeb2.com/file/YOURBUCKET/share3.enc.json",
+        ess: "https://YOUR-WORDPRESS-HOST/path/essentials.enc.json",
+        lb: "https://YOUR-WORDPRESS-HOST/path/lifeboat.enc",
+      };
+      $("#useDefaults").addEventListener("click", () => {
+        $("#urlS1").value = DEFAULTS.s1;
+        $("#urlS2").value = DEFAULTS.s2;
+        $("#urlS3").value = DEFAULTS.s3;
+        $("#urlEss").value = DEFAULTS.ess;
+        $("#urlLB").value = DEFAULTS.lb;
+      });
+
+      // PBKDF2 (portable in browsers)
+      const PBKDF2_ITER = 600000;
+      async function kdf(pin, salt) {
+        const km = await crypto.subtle.importKey(
+          "raw",
+          utf8(pin),
+          "PBKDF2",
+          false,
+          ["deriveKey"]
+        );
+        return crypto.subtle.deriveKey(
+          { name: "PBKDF2", hash: "SHA-256", salt, iterations: PBKDF2_ITER },
+          km,
+          { name: "AES-GCM", length: 256 },
+          false,
+          ["encrypt", "decrypt"]
+        );
+      }
+      async function aesDec(key, nonce, ct) {
+        try {
+          return await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: nonce },
+            key,
+            ct
+          );
+        } catch (e) {
+          throw new Error("Decrypt failed (bad PIN or tampered data).");
+        }
+      }
+
+      // GF(256) helpers (poly 0x11b)
+      function gfMul(a, b) {
+        let p = 0;
+        for (let i = 0; i < 8; i++) {
+          if (b & 1) p ^= a;
+          const hi = a & 0x80;
+          a = (a << 1) & 0xff;
+          if (hi) a ^= 0x1b;
+          b >>= 1;
+        }
+        return p;
+      }
+      function gfPow(a, e) {
+        let r = 1;
+        while (e > 0) {
+          if (e & 1) r = gfMul(r, a);
+          a = gfMul(a, a);
+          e >>= 1;
+        }
+        return r;
+      }
+      function gfInv(a) {
+        if (a === 0) throw new Error("GF inverse of 0");
+        return gfPow(a, 254);
+      }
+      function gfAdd(a, b) {
+        return a ^ b;
+      }
+      function lagrangeAtZero(x1, y1, x2, y2) {
+        // s = y1 * (x2/(x2-x1)) + y2 * (x1/(x1-x2))  over GF(256)
+        const denom = gfAdd(x2, x1);
+        const l1 = gfMul(x2, gfInv(denom));
+        const l2 = gfMul(x1, gfInv(denom)); // since (x1-x2) = (x2-x1) in GF(2)
+        return gfAdd(gfMul(y1, l1), gfMul(y2, l2));
+      }
+
+      async function decryptShare(bytes, pin1, pin2) {
+        let j;
+        try {
+          j = JSON.parse(new TextDecoder().decode(bytes));
+        } catch (e) {
+          throw new Error("Share is not valid JSON");
+        }
+        if (j.v !== 1) throw new Error("Unsupported share version");
+        const salt1 = b64ToBuf(j.salt1),
+          salt2 = b64ToBuf(j.salt2);
+        const n1 = b64ToBuf(j.nonce1),
+          n2 = b64ToBuf(j.nonce2);
+        const ct = b64ToBuf(j.ct);
+        const k2 = await kdf(pin2, salt2);
+        const inner = await aesDec(k2, n2, ct);
+        const k1 = await kdf(pin1, salt1);
+        const plain = await aesDec(k1, n1, inner);
+        return { x: j.x | 0, y: new Uint8Array(plain) };
+      }
+
+      async function recoverMasterKeyFromAnyTwo() {
+        const pin1 = $("#pin1").value.trim(),
+          pin2 = $("#pin2").value.trim();
+        if (!pin1 || !pin2) throw new Error("Enter both PINs.");
+        status("Fetching/decrypting shares…");
+
+        const shares = [];
+        const tasks = [
+          fetchOrFile($("#urlS1"), $("#fileS1"))
+            .then((b) => decryptShare(b, pin1, pin2))
+            .catch(() => null),
+          fetchOrFile($("#urlS2"), $("#fileS2"))
+            .then((b) => decryptShare(b, pin1, pin2))
+            .catch(() => null),
+          fetchOrFile($("#urlS3"), $("#fileS3"))
+            .then((b) => decryptShare(b, pin1, pin2))
+            .catch(() => null),
+        ];
+        const res = await Promise.all(tasks);
+        for (const r of res) if (r) shares.push(r);
+        if (shares.length < 2)
+          throw new Error("Need at least two valid shares.");
+
+        const a = shares[0],
+          b = shares[1];
+        if (a.y.length !== b.y.length) throw new Error("Share length mismatch");
+        const x1 = a.x,
+          x2 = b.x;
+        if (!x1 || !x2 || x1 === x2) throw new Error("Bad share indices");
+
+        const out = new Uint8Array(a.y.length);
+        for (let i = 0; i < out.length; i++)
+          out[i] = lagrangeAtZero(x1, a.y[i], x2, b.y[i]);
+        return out.buffer; // 32 bytes
+      }
+
+      async function decryptEssentials(mkey) {
+        status("Fetching essentials…");
+        const u = $("#fileEss").files[0]
+          ? await fetchOrFile($("#urlEss"), $("#fileEss"))
+          : await fetchOrFile($("#urlEss"), $("#fileEss"));
+        let j;
+        try {
+          j = JSON.parse(new TextDecoder().decode(u));
+        } catch (e) {
+          throw new Error("essentials not JSON");
+        }
+        if (j.v !== 1) throw new Error("Unsupported essentials version");
+        const key = await crypto.subtle.importKey(
+          "raw",
+          mkey,
+          { name: "AES-GCM" },
+          false,
+          ["decrypt"]
+        );
+        const pt = await aesDec(key, b64ToBuf(j.nonce), b64ToBuf(j.ct));
+        return new TextDecoder().decode(pt);
+      }
+
+      async function decryptLifeboat(mkey) {
+        status("Fetching lifeboat…");
+        const b = await fetchOrFile($("#urlLB"), $("#fileLB"));
+        let j;
+        try {
+          j = JSON.parse(new TextDecoder().decode(b));
+        } catch (e) {
+          throw new Error("lifeboat not JSON");
+        }
+        if (j.v !== 1) throw new Error("Unsupported lifeboat version");
+        const key = await crypto.subtle.importKey(
+          "raw",
+          mkey,
+          { name: "AES-GCM" },
+          false,
+          ["decrypt"]
+        );
+        const pt = await aesDec(key, b64ToBuf(j.nonce), b64ToBuf(j.ct));
+        const blob = new Blob([pt], { type: "application/octet-stream" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "lifeboat.tgz";
+        a.click();
+        status("Downloaded lifeboat.tgz. Clean up after yourself.", "ok");
+      }
+
+      $("#useDefaults").addEventListener("click", () => {
+        $("#urlS1").value = DEFAULTS.s1;
+        $("#urlS2").value = DEFAULTS.s2;
+        $("#urlS3").value = DEFAULTS.s3;
+        $("#urlEss").value = DEFAULTS.ess;
+        $("#urlLB").value = DEFAULTS.lb;
+      });
+      $("#btnEss").addEventListener("click", async () => {
+        try {
+          $("#out").classList.add("hide");
+          status("Starting…");
+          const mkey = await recoverMasterKeyFromAnyTwo();
+          const txt = await decryptEssentials(mkey);
+          $("#out").classList.remove("hide");
+          $("#ess").textContent = txt;
+          status("Essentials recovered.", "ok");
+        } catch (e) {
+          status(e.message, "err");
+        }
+      });
+      $("#btnLB").addEventListener("click", async () => {
+        try {
+          status("Starting…");
+          const mkey = await recoverMasterKeyFromAnyTwo();
+          await decryptEssentials(mkey); // sanity step
+          await decryptLifeboat(mkey);
+        } catch (e) {
+          status(e.message, "err");
+        }
+      });
+    </script>
+  </body>
+</html>
