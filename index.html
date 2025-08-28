@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Recovery Portal</title>
+    <title>Recovery Portal (2-of-3)</title>
     <style>
       body {
         font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
         margin: 2rem;
-        max-width: 900px;
+        max-width: 980px;
       }
       h1 {
         font-size: 1.6rem;
@@ -25,8 +25,7 @@
         align-items: center;
       }
       input[type="text"],
-      input[type="password"],
-      textarea {
+      input[type="password"] {
         width: 100%;
         padding: 0.6rem 0.7rem;
         border: 1px solid #bbb;
@@ -71,7 +70,7 @@
         color: #b00020;
       }
       .mono {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
         font-size: 0.9rem;
       }
       .small {
@@ -80,82 +79,69 @@
       .hide {
         display: none;
       }
-      .files {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
-      }
-      .footer {
-        margin-top: 2rem;
-        font-size: 0.9rem;
-        color: #555;
-      }
-      .kbd {
-        border: 1px solid #aaa;
-        border-bottom-width: 3px;
-        padding: 0 0.3rem;
-        border-radius: 6px;
-        font-family: ui-monospace, monospace;
-      }
     </style>
-    <!-- Basic Content Security Policy: limit outbound fetches to known hosts. Adjust to your domains. -->
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://raw.githubusercontent.com https://raw.githubusercontent.com/ https://raw.fastgit.org https://rawcdn.githack.com https://*.backblazeb2.com https://f*.backblazeb2.com https://*.b2.cldnn.net https://YOUR-WORDPRESS-HOST; base-uri 'none'; form-action 'self'"
-    />
   </head>
   <body>
-    <h1>Recovery Portal</h1>
+    <h1>Recovery Portal (2-of-3)</h1>
     <p class="muted">
-      All crypto happens locally in your browser. Nothing is uploaded anywhere.
-      Use an incognito window on a public PC. Prefer “Show essentials only”.
+      All crypto is local in your browser. Nothing uploads. Use incognito on
+      public PCs. Prefer “Essentials”.
     </p>
 
     <div class="card">
       <h3>Step 1 — File locations</h3>
       <p class="small">
-        Enter URLs (or leave default) for the encrypted blobs. You may also
-        choose files from disk if CORS is blocked.
+        Enter URLs or choose files. You only need any
+        <strong>two</strong> shares.
       </p>
       <div class="grid">
         <div>
-          <label class="small mono"
-            >keyblob.json (master key, double-encrypted — needs both
-            PINs)</label
-          >
+          <label class="small mono">share1.enc.json (x=1)</label>
           <input
-            id="urlKeyblob"
+            id="urlS1"
             type="text"
-            placeholder="https://yourdomain.com/path/keyblob.json"
+            placeholder="https://…/share1.enc.json"
           />
-          <input id="fileKeyblob" type="file" />
+          <input id="fileS1" type="file" />
         </div>
         <div>
-          <label class="small mono">essentials.enc.json (minimal codes)</label>
+          <label class="small mono">share2.enc.json (x=2)</label>
           <input
-            id="urlEssentials"
+            id="urlS2"
             type="text"
-            placeholder="https://yourdomain.com/path/essentials.enc.json"
+            placeholder="https://…/share2.enc.json"
           />
-          <input id="fileEssentials" type="file" />
+          <input id="fileS2" type="file" />
+        </div>
+        <div>
+          <label class="small mono">share3.enc.json (x=3)</label>
+          <input
+            id="urlS3"
+            type="text"
+            placeholder="https://…/share3.enc.json"
+          />
+          <input id="fileS3" type="file" />
+        </div>
+        <div>
+          <label class="small mono">essentials.enc.json</label>
+          <input
+            id="urlEss"
+            type="text"
+            placeholder="https://…/essentials.enc.json"
+          />
+          <input id="fileEss" type="file" />
         </div>
       </div>
       <details style="margin-top: 0.5rem">
-        <summary class="small">
-          Optional: lifeboat.enc (full archive; big download on public PCs)
-        </summary>
-        <input
-          id="urlLifeboat"
-          type="text"
-          placeholder="https://yourdomain.com/path/lifeboat.enc"
-        />
-        <input id="fileLifeboat" type="file" />
+        <summary class="small">Optional: lifeboat.enc (full archive)</summary>
+        <input id="urlLB" type="text" placeholder="https://…/lifeboat.enc" />
+        <input id="fileLB" type="file" />
       </details>
       <div class="row" style="margin-top: 0.75rem">
         <button id="useDefaults">Use defaults</button>
         <span class="small"
-          >Defaults are compiled into this page. Host the same file on WordPress
-          and GitHub Pages.</span
+          >Defaults are compiled into this page. Host this same file on
+          WordPress & GitHub Pages.</span
         >
       </div>
     </div>
@@ -164,8 +150,8 @@
       <h3>Step 2 — Enter your two PINs</h3>
       <div class="grid">
         <div>
-          <label class="small">PIN #1</label>
-          <input
+          <label class="small">PIN #1</label
+          ><input
             id="pin1"
             type="password"
             inputmode="numeric"
@@ -173,8 +159,8 @@
           />
         </div>
         <div>
-          <label class="small">PIN #2</label>
-          <input
+          <label class="small">PIN #2</label
+          ><input
             id="pin2"
             type="password"
             inputmode="numeric"
@@ -182,44 +168,34 @@
           />
         </div>
       </div>
-      <p class="small muted">
-        Both PINs are required. They are never sent anywhere.
-      </p>
+      <p class="small muted">Both PINs are required to open any share.</p>
     </div>
 
     <div class="card">
       <h3>Step 3 — Recover</h3>
       <div class="row">
-        <button class="primary" id="btnEssentials">Show essentials only</button>
-        <button id="btnLifeboat">Download full archive</button>
+        <button class="primary" id="btnEss">Show essentials only</button>
+        <button id="btnLB">Download full archive</button>
       </div>
       <div id="status" class="small muted" style="margin-top: 0.5rem"></div>
     </div>
 
-    <div id="output" class="card hide">
+    <div id="out" class="card hide">
       <h3>Essentials</h3>
-      <pre id="essentials" class="mono"></pre>
+      <pre id="ess" class="mono"></pre>
       <p class="warn small">
-        Do not leave this on-screen longer than necessary on a public computer.
-        Rotate anything you expose once you regain your own device.
-      </p>
-    </div>
-
-    <div class="footer">
-      <p>
-        <strong>Local cryptography:</strong> PBKDF2-HMAC-SHA-256 (browser
-        WebCrypto) with high iterations; AES-256-GCM; double encryption for
-        keyblob (both PINs required). Integrity checked with AEAD. This page
-        stores nothing.
+        Don’t linger on a public PC. Rotate anything you expose once you’re back
+        on your device.
       </p>
     </div>
 
     <script>
       "use strict";
-      // === Helpers ===
-      const $ = (sel) => document.querySelector(sel);
-      function bufToB64(buf) {
-        return btoa(String.fromCharCode(...new Uint8Array(buf)));
+      const $ = (q) => document.querySelector(q);
+      function status(msg, cls) {
+        const el = $("#status");
+        el.textContent = msg;
+        el.className = "small " + (cls || "muted");
       }
       function b64ToBuf(b64) {
         return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer;
@@ -227,34 +203,35 @@
       function utf8(s) {
         return new TextEncoder().encode(s).buffer;
       }
-      function concatBuf(a, b) {
-        const ua = new Uint8Array(a),
-          ub = new Uint8Array(b);
-        const out = new Uint8Array(ua.length + ub.length);
-        out.set(ua, 0);
-        out.set(ub, ua.length);
-        return out.buffer;
+      async function fetchOrFile(urlEl, fileEl) {
+        if (fileEl.files && fileEl.files[0])
+          return new Uint8Array(await fileEl.files[0].arrayBuffer());
+        const u = urlEl.value.trim();
+        const r = await fetch(u, { cache: "no-store" });
+        if (!r.ok) throw new Error("Fetch failed: " + r.status);
+        return new Uint8Array(await r.arrayBuffer());
       }
 
-      // Defaults — replace with your actual public URLs before publishing.
+      // Defaults — REPLACE with your URLs before publishing
       const DEFAULTS = {
-        keyblob: "https://YOUR-WORDPRESS-HOST/path/keyblob.json",
-        essentials: "https://YOUR-WORDPRESS-HOST/path/essentials.enc.json",
-        lifeboat: "https://YOUR-WORDPRESS-HOST/path/lifeboat.enc",
+        s1: "https://YOUR-WORDPRESS-HOST/path/share1.enc.json",
+        s2: "https://raw.githubusercontent.com/YOURUSER/YOURREPO/main/share2.enc.json",
+        s3: "https://f002.backblazeb2.com/file/YOURBUCKET/share3.enc.json",
+        ess: "https://YOUR-WORDPRESS-HOST/path/essentials.enc.json",
+        lb: "https://YOUR-WORDPRESS-HOST/path/lifeboat.enc",
       };
+      $("#useDefaults").addEventListener("click", () => {
+        $("#urlS1").value = DEFAULTS.s1;
+        $("#urlS2").value = DEFAULTS.s2;
+        $("#urlS3").value = DEFAULTS.s3;
+        $("#urlEss").value = DEFAULTS.ess;
+        $("#urlLB").value = DEFAULTS.lb;
+      });
 
-      // KDF parameters (tune if needed)
-      const PBKDF2_ITER = 600000; // ~0.5–1.5s on typical machines; adjust as needed
-
-      async function importAesKey(raw) {
-        return crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, [
-          "encrypt",
-          "decrypt",
-        ]);
-      }
-
-      async function kdfFromPin(pin, salt) {
-        const keyMat = await crypto.subtle.importKey(
+      // PBKDF2 (portable in browsers)
+      const PBKDF2_ITER = 600000;
+      async function kdf(pin, salt) {
+        const km = await crypto.subtle.importKey(
           "raw",
           utf8(pin),
           "PBKDF2",
@@ -263,163 +240,193 @@
         );
         return crypto.subtle.deriveKey(
           { name: "PBKDF2", hash: "SHA-256", salt, iterations: PBKDF2_ITER },
-          keyMat,
+          km,
           { name: "AES-GCM", length: 256 },
           false,
           ["encrypt", "decrypt"]
         );
       }
-
-      async function aesGcmDecryptRaw(key, nonce, data) {
+      async function aesDec(key, nonce, ct) {
         try {
           return await crypto.subtle.decrypt(
             { name: "AES-GCM", iv: nonce },
             key,
-            data
+            ct
           );
         } catch (e) {
-          throw new Error("AES-GCM decrypt failed (bad PIN or tampered data).");
+          throw new Error("Decrypt failed (bad PIN or tampered data).");
         }
       }
 
-      async function fetchOrFile(urlEl, fileEl) {
-        if (fileEl.files && fileEl.files[0]) {
-          const ab = await fileEl.files[0].arrayBuffer();
-          return new Uint8Array(ab);
+      // GF(256) helpers (poly 0x11b)
+      function gfMul(a, b) {
+        let p = 0;
+        for (let i = 0; i < 8; i++) {
+          if (b & 1) p ^= a;
+          const hi = a & 0x80;
+          a = (a << 1) & 0xff;
+          if (hi) a ^= 0x1b;
+          b >>= 1;
         }
-        const url = urlEl.value.trim();
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok)
-          throw new Error("Fetch failed: " + res.status + " " + res.statusText);
-        const ab = await res.arrayBuffer();
-        return new Uint8Array(ab);
+        return p;
+      }
+      function gfPow(a, e) {
+        let r = 1;
+        while (e > 0) {
+          if (e & 1) r = gfMul(r, a);
+          a = gfMul(a, a);
+          e >>= 1;
+        }
+        return r;
+      }
+      function gfInv(a) {
+        if (a === 0) throw new Error("GF inverse of 0");
+        return gfPow(a, 254);
+      }
+      function gfAdd(a, b) {
+        return a ^ b;
+      }
+      function lagrangeAtZero(x1, y1, x2, y2) {
+        // s = y1 * (x2/(x2-x1)) + y2 * (x1/(x1-x2))  over GF(256)
+        const denom = gfAdd(x2, x1);
+        const l1 = gfMul(x2, gfInv(denom));
+        const l2 = gfMul(x1, gfInv(denom)); // since (x1-x2) = (x2-x1) in GF(2)
+        return gfAdd(gfMul(y1, l1), gfMul(y2, l2));
       }
 
-      function setStatus(msg, cls) {
-        const el = $("#status");
-        el.textContent = msg;
-        el.className = "small " + (cls || "muted");
-      }
-      function showOut(text) {
-        $("#output").classList.remove("hide");
-        $("#essentials").textContent = text;
-      }
-
-      async function recoverMasterKey() {
-        setStatus("Fetching keyblob…");
-        const keyblobBytes = await fetchOrFile(
-          $("#urlKeyblob"),
-          $("#fileKeyblob")
-        );
-        // Expect JSON
-        let jb;
+      async function decryptShare(bytes, pin1, pin2) {
+        let j;
         try {
-          jb = JSON.parse(new TextDecoder().decode(keyblobBytes));
+          j = JSON.parse(new TextDecoder().decode(bytes));
         } catch (e) {
-          throw new Error("keyblob is not valid JSON");
+          throw new Error("Share is not valid JSON");
         }
-        // Structure: {v:1, kdf:"PBKDF2-SHA256", iter, salt1, nonce1, salt2, nonce2, ct}
-        if (jb.v !== 1) throw new Error("Unsupported keyblob version");
-        const salt1 = new Uint8Array(b64ToBuf(jb.salt1));
-        const salt2 = new Uint8Array(b64ToBuf(jb.salt2));
-        const nonce1 = new Uint8Array(b64ToBuf(jb.nonce1));
-        const nonce2 = new Uint8Array(b64ToBuf(jb.nonce2));
-        const ct = new Uint8Array(b64ToBuf(jb.ct));
-        const pin1 = $("#pin1").value.trim();
-        const pin2 = $("#pin2").value.trim();
+        if (j.v !== 1) throw new Error("Unsupported share version");
+        const salt1 = b64ToBuf(j.salt1),
+          salt2 = b64ToBuf(j.salt2);
+        const n1 = b64ToBuf(j.nonce1),
+          n2 = b64ToBuf(j.nonce2);
+        const ct = b64ToBuf(j.ct);
+        const k2 = await kdf(pin2, salt2);
+        const inner = await aesDec(k2, n2, ct);
+        const k1 = await kdf(pin1, salt1);
+        const plain = await aesDec(k1, n1, inner);
+        return { x: j.x | 0, y: new Uint8Array(plain) };
+      }
+
+      async function recoverMasterKeyFromAnyTwo() {
+        const pin1 = $("#pin1").value.trim(),
+          pin2 = $("#pin2").value.trim();
         if (!pin1 || !pin2) throw new Error("Enter both PINs.");
-        setStatus("Deriving keys (this may take a moment)…");
-        const k2 = await kdfFromPin(pin2, salt2.buffer);
-        const mid = await aesGcmDecryptRaw(k2, nonce2, ct.buffer); // yields inner ciphertext
-        const k1 = await kdfFromPin(pin1, salt1.buffer);
-        const mkey = await aesGcmDecryptRaw(k1, nonce1, mid); // yields 32-byte master key
-        if (new Uint8Array(mkey).byteLength !== 32)
-          throw new Error("Master key wrong size");
-        return mkey; // ArrayBuffer length 32
+        status("Fetching/decrypting shares…");
+
+        const shares = [];
+        const tasks = [
+          fetchOrFile($("#urlS1"), $("#fileS1"))
+            .then((b) => decryptShare(b, pin1, pin2))
+            .catch(() => null),
+          fetchOrFile($("#urlS2"), $("#fileS2"))
+            .then((b) => decryptShare(b, pin1, pin2))
+            .catch(() => null),
+          fetchOrFile($("#urlS3"), $("#fileS3"))
+            .then((b) => decryptShare(b, pin1, pin2))
+            .catch(() => null),
+        ];
+        const res = await Promise.all(tasks);
+        for (const r of res) if (r) shares.push(r);
+        if (shares.length < 2)
+          throw new Error("Need at least two valid shares.");
+
+        const a = shares[0],
+          b = shares[1];
+        if (a.y.length !== b.y.length) throw new Error("Share length mismatch");
+        const x1 = a.x,
+          x2 = b.x;
+        if (!x1 || !x2 || x1 === x2) throw new Error("Bad share indices");
+
+        const out = new Uint8Array(a.y.length);
+        for (let i = 0; i < out.length; i++)
+          out[i] = lagrangeAtZero(x1, a.y[i], x2, b.y[i]);
+        return out.buffer; // 32 bytes
       }
 
-      async function recoverEssentials(mkey) {
-        setStatus("Fetching essentials…");
-        const bytes = await fetchOrFile(
-          $("#urlEssentials"),
-          $("#fileEssentials")
-        );
-        let ej;
+      async function decryptEssentials(mkey) {
+        status("Fetching essentials…");
+        const u = $("#fileEss").files[0]
+          ? await fetchOrFile($("#urlEss"), $("#fileEss"))
+          : await fetchOrFile($("#urlEss"), $("#fileEss"));
+        let j;
         try {
-          ej = JSON.parse(new TextDecoder().decode(bytes));
+          j = JSON.parse(new TextDecoder().decode(u));
         } catch (e) {
-          throw new Error("essentials is not valid JSON");
+          throw new Error("essentials not JSON");
         }
-        if (ej.v !== 1) throw new Error("Unsupported essentials version");
-        const key = await importAesKey(mkey);
-        const pt = await aesGcmDecryptRaw(
-          key,
-          b64ToBuf(ej.nonce),
-          b64ToBuf(ej.ct)
+        if (j.v !== 1) throw new Error("Unsupported essentials version");
+        const key = await crypto.subtle.importKey(
+          "raw",
+          mkey,
+          { name: "AES-GCM" },
+          false,
+          ["decrypt"]
         );
-        const text = new TextDecoder().decode(pt);
-        return text;
+        const pt = await aesDec(key, b64ToBuf(j.nonce), b64ToBuf(j.ct));
+        return new TextDecoder().decode(pt);
       }
 
-      async function recoverLifeboat(mkey) {
-        setStatus("Fetching lifeboat…");
-        const ab = await fetchOrFile($("#urlLifeboat"), $("#fileLifeboat"));
-        // lifeboat.enc is our simple v1: {v:1, nonce, ct} JSON
-        let lj;
+      async function decryptLifeboat(mkey) {
+        status("Fetching lifeboat…");
+        const b = await fetchOrFile($("#urlLB"), $("#fileLB"));
+        let j;
         try {
-          lj = JSON.parse(new TextDecoder().decode(ab));
+          j = JSON.parse(new TextDecoder().decode(b));
         } catch (e) {
-          throw new Error("lifeboat.enc is not valid JSON");
+          throw new Error("lifeboat not JSON");
         }
-        if (lj.v !== 1) throw new Error("Unsupported lifeboat version");
-        const key = await importAesKey(mkey);
-        const pt = await aesGcmDecryptRaw(
-          key,
-          b64ToBuf(lj.nonce),
-          b64ToBuf(lj.ct)
+        if (j.v !== 1) throw new Error("Unsupported lifeboat version");
+        const key = await crypto.subtle.importKey(
+          "raw",
+          mkey,
+          { name: "AES-GCM" },
+          false,
+          ["decrypt"]
         );
-        // Offer download
+        const pt = await aesDec(key, b64ToBuf(j.nonce), b64ToBuf(j.ct));
         const blob = new Blob([pt], { type: "application/octet-stream" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = "lifeboat.tgz";
         a.click();
-        setStatus(
-          "Downloaded lifeboat.tgz. Clean up after yourself on public PCs.",
-          "ok"
-        );
+        status("Downloaded lifeboat.tgz. Clean up after yourself.", "ok");
       }
 
       $("#useDefaults").addEventListener("click", () => {
-        $("#urlKeyblob").value = DEFAULTS.keyblob;
-        $("#urlEssentials").value = DEFAULTS.essentials;
-        $("#urlLifeboat").value = DEFAULTS.lifeboat;
+        $("#urlS1").value = DEFAULTS.s1;
+        $("#urlS2").value = DEFAULTS.s2;
+        $("#urlS3").value = DEFAULTS.s3;
+        $("#urlEss").value = DEFAULTS.ess;
+        $("#urlLB").value = DEFAULTS.lb;
       });
-
-      $("#btnEssentials").addEventListener("click", async () => {
+      $("#btnEss").addEventListener("click", async () => {
         try {
-          $("#output").classList.add("hide");
-          setStatus("Starting…");
-          const mkey = await recoverMasterKey();
-          const text = await recoverEssentials(mkey);
-          showOut(text);
-          setStatus(
-            "Essentials recovered. Do what you need, then rotate later.",
-            "ok"
-          );
+          $("#out").classList.add("hide");
+          status("Starting…");
+          const mkey = await recoverMasterKeyFromAnyTwo();
+          const txt = await decryptEssentials(mkey);
+          $("#out").classList.remove("hide");
+          $("#ess").textContent = txt;
+          status("Essentials recovered.", "ok");
         } catch (e) {
-          setStatus(e.message, "err");
+          status(e.message, "err");
         }
       });
-
-      $("#btnLifeboat").addEventListener("click", async () => {
+      $("#btnLB").addEventListener("click", async () => {
         try {
-          setStatus("Starting…");
-          const mkey = await recoverMasterKey();
-          await recoverEssentials(mkey); // encourage viewing essentials first
-          await recoverLifeboat(mkey);
+          status("Starting…");
+          const mkey = await recoverMasterKeyFromAnyTwo();
+          await decryptEssentials(mkey); // sanity step
+          await decryptLifeboat(mkey);
         } catch (e) {
-          setStatus(e.message, "err");
+          status(e.message, "err");
         }
       });
     </script>
