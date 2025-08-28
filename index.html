@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recovery Portal</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        margin: 2rem;
+        max-width: 900px;
+      }
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 0.25rem;
+      }
+      .muted {
+        color: #555;
+        font-size: 0.95rem;
+      }
+      .row {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      input[type="text"],
+      input[type="password"],
+      textarea {
+        width: 100%;
+        padding: 0.6rem 0.7rem;
+        border: 1px solid #bbb;
+        border-radius: 8px;
+        font-size: 0.95rem;
+      }
+      input[type="password"] {
+        letter-spacing: 0.2em;
+      }
+      button {
+        padding: 0.6rem 0.9rem;
+        border: 1px solid #222;
+        background: #fff;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      button.primary {
+        background: #111;
+        color: #fff;
+      }
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      .card {
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 1rem;
+      }
+      .ok {
+        color: #0a7f41;
+      }
+      .warn {
+        color: #b45309;
+      }
+      .err {
+        color: #b00020;
+      }
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9rem;
+      }
+      .small {
+        font-size: 0.9rem;
+      }
+      .hide {
+        display: none;
+      }
+      .files {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+      .footer {
+        margin-top: 2rem;
+        font-size: 0.9rem;
+        color: #555;
+      }
+      .kbd {
+        border: 1px solid #aaa;
+        border-bottom-width: 3px;
+        padding: 0 0.3rem;
+        border-radius: 6px;
+        font-family: ui-monospace, monospace;
+      }
+    </style>
+    <!-- Basic Content Security Policy: limit outbound fetches to known hosts. Adjust to your domains. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://raw.githubusercontent.com https://raw.githubusercontent.com/ https://raw.fastgit.org https://rawcdn.githack.com https://*.backblazeb2.com https://f*.backblazeb2.com https://*.b2.cldnn.net https://YOUR-WORDPRESS-HOST; base-uri 'none'; form-action 'self'"
+    />
+  </head>
+  <body>
+    <h1>Recovery Portal</h1>
+    <p class="muted">
+      All crypto happens locally in your browser. Nothing is uploaded anywhere.
+      Use an incognito window on a public PC. Prefer “Show essentials only”.
+    </p>
+
+    <div class="card">
+      <h3>Step 1 — File locations</h3>
+      <p class="small">
+        Enter URLs (or leave default) for the encrypted blobs. You may also
+        choose files from disk if CORS is blocked.
+      </p>
+      <div class="grid">
+        <div>
+          <label class="small mono"
+            >keyblob.json (master key, double-encrypted — needs both
+            PINs)</label
+          >
+          <input
+            id="urlKeyblob"
+            type="text"
+            placeholder="https://yourdomain.com/path/keyblob.json"
+          />
+          <input id="fileKeyblob" type="file" />
+        </div>
+        <div>
+          <label class="small mono">essentials.enc.json (minimal codes)</label>
+          <input
+            id="urlEssentials"
+            type="text"
+            placeholder="https://yourdomain.com/path/essentials.enc.json"
+          />
+          <input id="fileEssentials" type="file" />
+        </div>
+      </div>
+      <details style="margin-top: 0.5rem">
+        <summary class="small">
+          Optional: lifeboat.enc (full archive; big download on public PCs)
+        </summary>
+        <input
+          id="urlLifeboat"
+          type="text"
+          placeholder="https://yourdomain.com/path/lifeboat.enc"
+        />
+        <input id="fileLifeboat" type="file" />
+      </details>
+      <div class="row" style="margin-top: 0.75rem">
+        <button id="useDefaults">Use defaults</button>
+        <span class="small"
+          >Defaults are compiled into this page. Host the same file on WordPress
+          and GitHub Pages.</span
+        >
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Step 2 — Enter your two PINs</h3>
+      <div class="grid">
+        <div>
+          <label class="small">PIN #1</label>
+          <input
+            id="pin1"
+            type="password"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+          />
+        </div>
+        <div>
+          <label class="small">PIN #2</label>
+          <input
+            id="pin2"
+            type="password"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+          />
+        </div>
+      </div>
+      <p class="small muted">
+        Both PINs are required. They are never sent anywhere.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Step 3 — Recover</h3>
+      <div class="row">
+        <button class="primary" id="btnEssentials">Show essentials only</button>
+        <button id="btnLifeboat">Download full archive</button>
+      </div>
+      <div id="status" class="small muted" style="margin-top: 0.5rem"></div>
+    </div>
+
+    <div id="output" class="card hide">
+      <h3>Essentials</h3>
+      <pre id="essentials" class="mono"></pre>
+      <p class="warn small">
+        Do not leave this on-screen longer than necessary on a public computer.
+        Rotate anything you expose once you regain your own device.
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>
+        <strong>Local cryptography:</strong> PBKDF2-HMAC-SHA-256 (browser
+        WebCrypto) with high iterations; AES-256-GCM; double encryption for
+        keyblob (both PINs required). Integrity checked with AEAD. This page
+        stores nothing.
+      </p>
+    </div>
+
+    <script>
+      "use strict";
+      // === Helpers ===
+      const $ = (sel) => document.querySelector(sel);
+      function bufToB64(buf) {
+        return btoa(String.fromCharCode(...new Uint8Array(buf)));
+      }
+      function b64ToBuf(b64) {
+        return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer;
+      }
+      function utf8(s) {
+        return new TextEncoder().encode(s).buffer;
+      }
+      function concatBuf(a, b) {
+        const ua = new Uint8Array(a),
+          ub = new Uint8Array(b);
+        const out = new Uint8Array(ua.length + ub.length);
+        out.set(ua, 0);
+        out.set(ub, ua.length);
+        return out.buffer;
+      }
+
+      // Defaults — replace with your actual public URLs before publishing.
+      const DEFAULTS = {
+        keyblob: "https://YOUR-WORDPRESS-HOST/path/keyblob.json",
+        essentials: "https://YOUR-WORDPRESS-HOST/path/essentials.enc.json",
+        lifeboat: "https://YOUR-WORDPRESS-HOST/path/lifeboat.enc",
+      };
+
+      // KDF parameters (tune if needed)
+      const PBKDF2_ITER = 600000; // ~0.5–1.5s on typical machines; adjust as needed
+
+      async function importAesKey(raw) {
+        return crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, [
+          "encrypt",
+          "decrypt",
+        ]);
+      }
+
+      async function kdfFromPin(pin, salt) {
+        const keyMat = await crypto.subtle.importKey(
+          "raw",
+          utf8(pin),
+          "PBKDF2",
+          false,
+          ["deriveKey"]
+        );
+        return crypto.subtle.deriveKey(
+          { name: "PBKDF2", hash: "SHA-256", salt, iterations: PBKDF2_ITER },
+          keyMat,
+          { name: "AES-GCM", length: 256 },
+          false,
+          ["encrypt", "decrypt"]
+        );
+      }
+
+      async function aesGcmDecryptRaw(key, nonce, data) {
+        try {
+          return await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: nonce },
+            key,
+            data
+          );
+        } catch (e) {
+          throw new Error("AES-GCM decrypt failed (bad PIN or tampered data).");
+        }
+      }
+
+      async function fetchOrFile(urlEl, fileEl) {
+        if (fileEl.files && fileEl.files[0]) {
+          const ab = await fileEl.files[0].arrayBuffer();
+          return new Uint8Array(ab);
+        }
+        const url = urlEl.value.trim();
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok)
+          throw new Error("Fetch failed: " + res.status + " " + res.statusText);
+        const ab = await res.arrayBuffer();
+        return new Uint8Array(ab);
+      }
+
+      function setStatus(msg, cls) {
+        const el = $("#status");
+        el.textContent = msg;
+        el.className = "small " + (cls || "muted");
+      }
+      function showOut(text) {
+        $("#output").classList.remove("hide");
+        $("#essentials").textContent = text;
+      }
+
+      async function recoverMasterKey() {
+        setStatus("Fetching keyblob…");
+        const keyblobBytes = await fetchOrFile(
+          $("#urlKeyblob"),
+          $("#fileKeyblob")
+        );
+        // Expect JSON
+        let jb;
+        try {
+          jb = JSON.parse(new TextDecoder().decode(keyblobBytes));
+        } catch (e) {
+          throw new Error("keyblob is not valid JSON");
+        }
+        // Structure: {v:1, kdf:"PBKDF2-SHA256", iter, salt1, nonce1, salt2, nonce2, ct}
+        if (jb.v !== 1) throw new Error("Unsupported keyblob version");
+        const salt1 = new Uint8Array(b64ToBuf(jb.salt1));
+        const salt2 = new Uint8Array(b64ToBuf(jb.salt2));
+        const nonce1 = new Uint8Array(b64ToBuf(jb.nonce1));
+        const nonce2 = new Uint8Array(b64ToBuf(jb.nonce2));
+        const ct = new Uint8Array(b64ToBuf(jb.ct));
+        const pin1 = $("#pin1").value.trim();
+        const pin2 = $("#pin2").value.trim();
+        if (!pin1 || !pin2) throw new Error("Enter both PINs.");
+        setStatus("Deriving keys (this may take a moment)…");
+        const k2 = await kdfFromPin(pin2, salt2.buffer);
+        const mid = await aesGcmDecryptRaw(k2, nonce2, ct.buffer); // yields inner ciphertext
+        const k1 = await kdfFromPin(pin1, salt1.buffer);
+        const mkey = await aesGcmDecryptRaw(k1, nonce1, mid); // yields 32-byte master key
+        if (new Uint8Array(mkey).byteLength !== 32)
+          throw new Error("Master key wrong size");
+        return mkey; // ArrayBuffer length 32
+      }
+
+      async function recoverEssentials(mkey) {
+        setStatus("Fetching essentials…");
+        const bytes = await fetchOrFile(
+          $("#urlEssentials"),
+          $("#fileEssentials")
+        );
+        let ej;
+        try {
+          ej = JSON.parse(new TextDecoder().decode(bytes));
+        } catch (e) {
+          throw new Error("essentials is not valid JSON");
+        }
+        if (ej.v !== 1) throw new Error("Unsupported essentials version");
+        const key = await importAesKey(mkey);
+        const pt = await aesGcmDecryptRaw(
+          key,
+          b64ToBuf(ej.nonce),
+          b64ToBuf(ej.ct)
+        );
+        const text = new TextDecoder().decode(pt);
+        return text;
+      }
+
+      async function recoverLifeboat(mkey) {
+        setStatus("Fetching lifeboat…");
+        const ab = await fetchOrFile($("#urlLifeboat"), $("#fileLifeboat"));
+        // lifeboat.enc is our simple v1: {v:1, nonce, ct} JSON
+        let lj;
+        try {
+          lj = JSON.parse(new TextDecoder().decode(ab));
+        } catch (e) {
+          throw new Error("lifeboat.enc is not valid JSON");
+        }
+        if (lj.v !== 1) throw new Error("Unsupported lifeboat version");
+        const key = await importAesKey(mkey);
+        const pt = await aesGcmDecryptRaw(
+          key,
+          b64ToBuf(lj.nonce),
+          b64ToBuf(lj.ct)
+        );
+        // Offer download
+        const blob = new Blob([pt], { type: "application/octet-stream" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "lifeboat.tgz";
+        a.click();
+        setStatus(
+          "Downloaded lifeboat.tgz. Clean up after yourself on public PCs.",
+          "ok"
+        );
+      }
+
+      $("#useDefaults").addEventListener("click", () => {
+        $("#urlKeyblob").value = DEFAULTS.keyblob;
+        $("#urlEssentials").value = DEFAULTS.essentials;
+        $("#urlLifeboat").value = DEFAULTS.lifeboat;
+      });
+
+      $("#btnEssentials").addEventListener("click", async () => {
+        try {
+          $("#output").classList.add("hide");
+          setStatus("Starting…");
+          const mkey = await recoverMasterKey();
+          const text = await recoverEssentials(mkey);
+          showOut(text);
+          setStatus(
+            "Essentials recovered. Do what you need, then rotate later.",
+            "ok"
+          );
+        } catch (e) {
+          setStatus(e.message, "err");
+        }
+      });
+
+      $("#btnLifeboat").addEventListener("click", async () => {
+        try {
+          setStatus("Starting…");
+          const mkey = await recoverMasterKey();
+          await recoverEssentials(mkey); // encourage viewing essentials first
+          await recoverLifeboat(mkey);
+        } catch (e) {
+          setStatus(e.message, "err");
+        }
+      });
+    </script>
+  </body>
+</html>
