@@ -3,433 +3,432 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Recovery Portal (2-of-3)</title>
-    <style>
-      body {
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-        margin: 2rem;
-        max-width: 980px;
-      }
-      h1 {
-        font-size: 1.6rem;
-        margin-bottom: 0.25rem;
-      }
-      .muted {
-        color: #555;
-        font-size: 0.95rem;
-      }
-      .row {
-        display: flex;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-        align-items: center;
-      }
-      input[type="text"],
-      input[type="password"] {
-        width: 100%;
-        padding: 0.6rem 0.7rem;
-        border: 1px solid #bbb;
-        border-radius: 8px;
-        font-size: 0.95rem;
-      }
-      input[type="password"] {
-        letter-spacing: 0.2em;
-      }
-      button {
-        padding: 0.6rem 0.9rem;
-        border: 1px solid #222;
-        background: #fff;
-        border-radius: 10px;
-        cursor: pointer;
-      }
-      button.primary {
-        background: #111;
-        color: #fff;
-      }
-      button:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-      }
-      .grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-      }
-      .card {
-        border: 1px solid #ddd;
-        border-radius: 12px;
-        padding: 1rem;
-      }
-      .ok {
-        color: #0a7f41;
-      }
-      .warn {
-        color: #b45309;
-      }
-      .err {
-        color: #b00020;
-      }
-      .mono {
-        font-family: ui-monospace, Menlo, Consolas, monospace;
-        font-size: 0.9rem;
-      }
-      .small {
-        font-size: 0.9rem;
-      }
-      .hide {
-        display: none;
-      }
-    </style>
-    <!-- CSP that works on GH Pages & static WP: allows inline JS and any HTTPS fetch for blobs -->
+    <title>Recovery</title>
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self' blob: data:;
-           img-src 'self' data:;
-           style-src 'self' 'unsafe-inline';
+      content="default-src 'self';
            script-src 'self' 'unsafe-inline';
-           connect-src 'self' https:;
+           style-src 'self' 'unsafe-inline';
+           img-src 'self' data:;
+           connect-src 'none';
            base-uri 'none';
-           form-action 'self'"
+           form-action 'none'"
     />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        background: #111;
+        color: #e0e0e0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        padding: 2rem 1rem;
+      }
+      .container { max-width: 420px; width: 100%; }
+      h1 { font-size: 1.4rem; margin-bottom: 0.25rem; color: #fff; }
+      .muted { color: #888; font-size: 0.85rem; }
+      .warn { color: #b45309; font-size: 0.85rem; margin-top: 0.75rem; }
+      .card {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 10px;
+        padding: 1.25rem;
+        margin-top: 1rem;
+      }
+      label {
+        display: block;
+        font-size: 0.85rem;
+        color: #aaa;
+        margin-bottom: 0.3rem;
+        margin-top: 0.75rem;
+      }
+      label:first-child { margin-top: 0; }
+      input {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        background: #222;
+        border: 1px solid #444;
+        border-radius: 6px;
+        color: #fff;
+        font-size: 0.95rem;
+        outline: none;
+      }
+      input:focus { border-color: #666; }
+      input[type="password"] { letter-spacing: 0.15em; }
+      button {
+        margin-top: 1rem;
+        width: 100%;
+        padding: 0.65rem;
+        background: #fff;
+        color: #111;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover { background: #ddd; }
+      button:disabled { opacity: 0.4; cursor: not-allowed; }
+      .output { text-align: center; margin-top: 1rem; }
+      .code {
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.15em;
+        padding: 0.5rem 0;
+      }
+      .countdown {
+        font-size: 0.85rem;
+        color: #888;
+        margin-top: 0.25rem;
+      }
+      .countdown-bar {
+        height: 3px;
+        background: #333;
+        border-radius: 2px;
+        margin-top: 0.5rem;
+        overflow: hidden;
+      }
+      .countdown-fill {
+        height: 100%;
+        background: #fff;
+        border-radius: 2px;
+        transition: width 1s linear;
+      }
+      .seed-toggle {
+        font-size: 0.8rem;
+        color: #666;
+        cursor: pointer;
+        margin-top: 0.75rem;
+        display: inline-block;
+        background: none;
+        border: none;
+        padding: 0;
+        font-family: inherit;
+      }
+      .seed-toggle:hover { color: #aaa; }
+      .seed {
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 0.75rem;
+        color: #aaa;
+        word-break: break-all;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: #222;
+        border-radius: 4px;
+      }
+      .hide { display: none; }
+      .err { color: #e53935; font-size: 0.85rem; margin-top: 0.5rem; }
+      .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #555;
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        vertical-align: middle;
+        margin-right: 0.4rem;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .spec {
+        font-size: 0.7rem;
+        color: #555;
+        margin-top: 1.5rem;
+        line-height: 1.5;
+      }
+      .identicon {
+        font-size: 1.4rem;
+        height: 1.8rem;
+        line-height: 1.8rem;
+        text-align: center;
+        margin-top: 0.4rem;
+        letter-spacing: 0.3em;
+        user-select: none;
+      }
+    </style>
   </head>
   <body>
-    <h1>Recovery Portal (2-of-3)</h1>
-    <p class="muted">
-      All crypto runs locally in your browser. Nothing uploads. Use an incognito
-      window on public PCs.
-    </p>
+    <div class="container">
+      <h1>Recovery</h1>
+      <p class="muted">All crypto runs locally. Nothing uploads. Use an incognito window.</p>
 
-    <div class="card">
-      <h3>
-        Step 1 — Provide the files (any <strong>two</strong> shares +
-        essentials)
-      </h3>
-      <p class="small">
-        Paste a URL <em>or</em> choose a local file for each. You only need two
-        shares.
-      </p>
-      <div class="grid">
-        <div>
-          <label class="small mono">share1.enc.json (x=1)</label>
-          <input id="urlS1" type="text" placeholder="" />
-          <input id="fileS1" type="file" accept=".json,.txt,application/json" />
+      <form class="card" autocomplete="off" onsubmit="return false">
+        <label for="pw">Master password</label>
+        <input id="pw" type="password" autocomplete="off" spellcheck="false" />
+        <div id="identicon" class="identicon"></div>
+
+        <label for="name">Name</label>
+        <input id="name" type="text" autocomplete="off" spellcheck="false" />
+
+        <label for="site">Site</label>
+        <input id="site" type="text" autocomplete="off" spellcheck="false" />
+
+        <button id="btn" type="button">Derive</button>
+        <div id="err" class="err hide" role="alert"></div>
+      </form>
+
+      <div id="out" class="card hide">
+        <div class="output">
+          <div id="code" class="code" aria-live="polite"></div>
+          <div id="timer" class="countdown"></div>
+          <div class="countdown-bar"><div id="bar" class="countdown-fill"></div></div>
         </div>
-        <div>
-          <label class="small mono">share2.enc.json (x=2)</label>
-          <input id="urlS2" type="text" placeholder="" />
-          <input id="fileS2" type="file" accept=".json,.txt,application/json" />
+        <div style="text-align:center">
+          <button id="seedToggle" class="seed-toggle" type="button">Show seed</button>
         </div>
-        <div>
-          <label class="small mono">share3.enc.json (x=3)</label>
-          <input id="urlS3" type="text" placeholder="" />
-          <input id="fileS3" type="file" accept=".json,.txt,application/json" />
-        </div>
-        <div>
-          <label class="small mono">essentials.enc.json</label>
-          <input id="urlEss" type="text" placeholder="" />
-          <input
-            id="fileEss"
-            type="file"
-            accept=".json,.txt,application/json"
-          />
+        <div id="seedBox" class="hide">
+          <div id="seedVal" class="seed"></div>
         </div>
       </div>
-      <details style="margin-top: 0.5rem">
-        <summary class="small">Optional: lifeboat.enc (full archive)</summary>
-        <input id="urlLB" type="text" placeholder="" />
-        <input id="fileLB" type="file" accept=".json,.txt,application/json" />
-      </details>
-    </div>
 
-    <div class="card">
-      <h3>Step 2 — Enter your two PINs</h3>
-      <div class="grid">
-        <div>
-          <label class="small">PIN #1</label
-          ><input
-            id="pin1"
-            type="password"
-            inputmode="numeric"
-            autocomplete="one-time-code"
-          />
-        </div>
-        <div>
-          <label class="small">PIN #2</label
-          ><input
-            id="pin2"
-            type="password"
-            inputmode="numeric"
-            autocomplete="one-time-code"
-          />
-        </div>
-      </div>
-      <p class="small muted">
-        Both PINs are required to open any share. They never leave your browser.
+      <p class="warn hide" id="notice">
+        Don't linger on a public device. Close this tab when done.
       </p>
-    </div>
-
-    <div class="card">
-      <h3>Step 3 — Recover</h3>
-      <div class="row">
-        <button class="primary" id="btnEss">Show essentials only</button>
-        <button id="btnLB">Download full archive</button>
-      </div>
-      <div id="status" class="small muted" style="margin-top: 0.5rem"></div>
-    </div>
-
-    <div id="out" class="card hide">
-      <h3>Essentials</h3>
-      <pre id="ess" class="mono"></pre>
-      <p class="warn small">
-        Don’t linger on a public PC. Rotate anything you expose once you’re back
-        on your device.
+      <p class="muted" style="margin-top:0.75rem; font-size:0.75rem;">
+        Use a unique passphrase (5+ random words). Do not reuse passwords.
       </p>
+
+      <div class="spec">
+        v1 / PBKDF2-HMAC-SHA256 / 1,000,000 iterations / 20-byte key<br>
+        Salt: v1 + len(name) + name + len(site) + site (NFC, length-prefixed)<br>
+        TOTP: HMAC-SHA1, 6 digits, 30s (RFC 6238) / Base32 (RFC 4648, no padding)
+      </div>
     </div>
 
     <script>
       "use strict";
 
-      // ----- helpers -----
-      const $ = (sel) => document.querySelector(sel);
-      function setStatus(msg, cls) {
-        const el = $("#status");
-        el.textContent = msg;
-        el.className = "small " + (cls || "muted");
-      }
-      function b64ToBuf(b64) {
-        return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer;
-      }
-      function utf8(s) {
-        return new TextEncoder().encode(s).buffer;
-      }
+      const $ = (s) => document.querySelector(s);
+      const VERSION = "v1";
+      let derivedSeed = null;
+      let cachedB32 = null;
+      let hmacKey = null;
+      let refreshInterval = null;
+      let autoClearTimer = null;
+      let lastCounter = 0;
+      let lastResetTime = 0;
 
-      // show any uncaught errors in the status line
-      window.addEventListener("error", (e) =>
-        setStatus(e.message || String(e.error || e), "err")
-      );
-      window.addEventListener("unhandledrejection", (e) =>
-        setStatus((e.reason && e.reason.message) || String(e.reason), "err")
-      );
-
-      // file/URL loader with clear errors
-      async function fetchOrFile(urlEl, fileEl) {
-        if (fileEl.files && fileEl.files[0]) {
-          return new Uint8Array(await fileEl.files[0].arrayBuffer());
+      // Base32 encode (RFC 4648, no padding)
+      function base32Encode(buf) {
+        const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+        const bytes = new Uint8Array(buf);
+        let bits = 0, value = 0, out = "";
+        for (let i = 0; i < bytes.length; i++) {
+          value = (value << 8) | bytes[i];
+          bits += 8;
+          while (bits >= 5) {
+            out += alpha[(value >>> (bits - 5)) & 31];
+            bits -= 5;
+          }
         }
-        const url = (urlEl.value || "").trim();
-        if (!url)
-          throw new Error(`Paste a URL or choose a file for ${urlEl.id}.`);
-        let res;
-        try {
-          res = await fetch(url, { cache: "no-store" });
-        } catch (e) {
-          throw new Error(`Fetch failed (network/CORS): ${e.message}`);
-        }
-        if (!res.ok)
-          throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
-        return new Uint8Array(await res.arrayBuffer());
+        if (bits > 0) out += alpha[(value << (5 - bits)) & 31];
+        return out;
       }
 
-      // PBKDF2 (portable) + AES-GCM
-      const PBKDF2_ITER = 600000;
-      async function kdf(pin, salt) {
-        const km = await crypto.subtle.importKey(
-          "raw",
-          utf8(pin),
-          "PBKDF2",
-          false,
-          ["deriveKey"]
+      // Build length-prefixed salt: "v1" + uint32(len(name)) + name + uint32(len(site)) + site
+      function buildSalt(name, site) {
+        const enc = new TextEncoder();
+        const vBytes = enc.encode(VERSION);
+        const nBytes = enc.encode(name);
+        const sBytes = enc.encode(site);
+        const buf = new Uint8Array(vBytes.length + 4 + nBytes.length + 4 + sBytes.length);
+        const view = new DataView(buf.buffer);
+        let offset = 0;
+        buf.set(vBytes, offset); offset += vBytes.length;
+        view.setUint32(offset, nBytes.length, false); offset += 4;
+        buf.set(nBytes, offset); offset += nBytes.length;
+        view.setUint32(offset, sBytes.length, false); offset += 4;
+        buf.set(sBytes, offset);
+        return buf;
+      }
+
+      async function deriveKey(password, salt) {
+        const enc = new TextEncoder();
+        const keyMaterial = await crypto.subtle.importKey(
+          "raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]
         );
-        return crypto.subtle.deriveKey(
-          { name: "PBKDF2", hash: "SHA-256", salt, iterations: PBKDF2_ITER },
-          km,
-          { name: "AES-GCM", length: 256 },
-          false,
-          ["encrypt", "decrypt"]
-        );
+        return new Uint8Array(await crypto.subtle.deriveBits(
+          { name: "PBKDF2", hash: "SHA-256", salt: salt, iterations: 1000000 },
+          keyMaterial, 160
+        ));
       }
-      async function aesDec(key, nonce, ct) {
-        try {
-          return await crypto.subtle.decrypt(
-            { name: "AES-GCM", iv: nonce },
-            key,
-            ct
-          );
-        } catch (e) {
-          throw new Error("Decrypt failed (bad PIN or tampered data).");
+
+      // TOTP (RFC 6238) using cached HMAC key
+      async function generateTOTP(counter) {
+        const counterBuf = new ArrayBuffer(8);
+        new DataView(counterBuf).setUint32(4, counter, false);
+        const sig = new Uint8Array(await crypto.subtle.sign("HMAC", hmacKey, counterBuf));
+        const offset = sig[sig.length - 1] & 0x0f;
+        const binary =
+          ((sig[offset] & 0x7f) << 24) |
+          ((sig[offset + 1] & 0xff) << 16) |
+          ((sig[offset + 2] & 0xff) << 8) |
+          (sig[offset + 3] & 0xff);
+        return (binary % 1000000).toString().padStart(6, "0");
+      }
+
+      async function refreshCode() {
+        if (!derivedSeed) return;
+        const now = Math.floor(Date.now() / 1000);
+        const counter = Math.floor(now / 30);
+        if (counter !== lastCounter) {
+          const code = await generateTOTP(counter);
+          $("#code").textContent = code.slice(0, 3) + " " + code.slice(3);
+          lastCounter = counter;
         }
+        const rem = 30 - (now % 30);
+        $("#timer").textContent = rem + "s";
+        $("#bar").style.width = ((rem / 30) * 100) + "%";
       }
 
-      // ----- GF(256) for Shamir (poly 0x11b) -----
-      function gfMul(a, b) {
-        let p = 0;
-        for (let i = 0; i < 8; i++) {
-          if (b & 1) p ^= a;
-          const hi = a & 0x80;
-          a = (a << 1) & 0xff;
-          if (hi) a ^= 0x1b;
-          b >>= 1;
+      // Identicon: deterministic visual hash for typo detection
+      function updateIdenticon() {
+        const pw = $("#pw").value;
+        if (!pw) { $("#identicon").textContent = ""; return; }
+        let hash = 0;
+        for (let i = 0; i < pw.length; i++) {
+          hash = ((hash << 5) - hash + pw.charCodeAt(i)) | 0;
         }
-        return p;
-      }
-      function gfPow(a, e) {
-        let r = 1;
-        while (e > 0) {
-          if (e & 1) r = gfMul(r, a);
-          a = gfMul(a, a);
-          e >>= 1;
-        }
-        return r;
-      }
-      function gfInv(a) {
-        if (a === 0) throw new Error("GF inverse of 0");
-        return gfPow(a, 254);
-      }
-      function gfAdd(a, b) {
-        return a ^ b;
-      }
-      function lagrangeAtZero(x1, y1, x2, y2) {
-        // s = y1 * (x2/(x2-x1)) + y2 * (x1/(x1-x2)) in GF(256)
-        const denom = gfAdd(x2, x1); // (x2 - x1) == (x2 + x1) in GF(2)
-        const l1 = gfMul(x2, gfInv(denom));
-        const l2 = gfMul(x1, gfInv(denom));
-        return gfAdd(gfMul(y1, l1), gfMul(y2, l2));
-      }
-
-      // ----- decrypt share then reconstruct master key from any two -----
-      async function decryptShare(bytes, pin1, pin2) {
-        let j;
-        try {
-          j = JSON.parse(new TextDecoder().decode(bytes));
-        } catch (e) {
-          throw new Error("Share is not valid JSON");
-        }
-        if (j.v !== 1) throw new Error("Unsupported share version");
-        const salt1 = b64ToBuf(j.salt1),
-          salt2 = b64ToBuf(j.salt2);
-        const n1 = b64ToBuf(j.nonce1),
-          n2 = b64ToBuf(j.nonce2);
-        const ct = b64ToBuf(j.ct);
-        const k2 = await kdf(pin2, salt2);
-        const inner = await aesDec(k2, n2, ct);
-        const k1 = await kdf(pin1, salt1);
-        const plain = await aesDec(k1, n1, inner);
-        return { x: j.x | 0, y: new Uint8Array(plain) };
-      }
-
-      async function recoverMasterKeyFromAnyTwo() {
-        const pin1 = ($("#pin1").value || "").trim();
-        const pin2 = ($("#pin2").value || "").trim();
-        if (!pin1 || !pin2) throw new Error("Enter both PINs.");
-
-        setStatus("Fetching/decrypting shares…");
-
-        // try to load/decrypt up to 3 shares; accept any 2 that work
-        const attempts = [
-          fetchOrFile($("#urlS1"), $("#fileS1"))
-            .then((b) => decryptShare(b, pin1, pin2))
-            .catch(() => null),
-          fetchOrFile($("#urlS2"), $("#fileS2"))
-            .then((b) => decryptShare(b, pin1, pin2))
-            .catch(() => null),
-          fetchOrFile($("#urlS3"), $("#fileS3"))
-            .then((b) => decryptShare(b, pin1, pin2))
-            .catch(() => null),
+        const shapes = [
+          "\u25cf", "\u25b2", "\u25a0", "\u25c6", "\u2605",
+          "\u2666", "\u2663", "\u2660", "\u2665", "\u25cb"
         ];
-        const res = await Promise.all(attempts);
-        const shares = res.filter(Boolean);
-        if (shares.length < 2)
-          throw new Error(
-            "Need at least two valid shares (provide URLs or files)."
+        const colors = [
+          "#e53935", "#43a047", "#1e88e5", "#fb8c00", "#8e24aa",
+          "#00acc1", "#f4511e", "#7cb342", "#5c6bc0", "#ec407a"
+        ];
+        const abs = (hash < 0 ? -hash : hash) >>> 0;
+        const s1 = shapes[abs % 10];
+        const s2 = shapes[(abs >>> 4) % 10];
+        const s3 = shapes[(abs >>> 8) % 10];
+        const s4 = shapes[(abs >>> 12) % 10];
+        const c1 = colors[(abs >>> 16) % 10];
+        const c2 = colors[(abs >>> 20) % 10];
+        const el = $("#identicon");
+        el.innerHTML =
+          '<span style="color:' + c1 + '">' + s1 + s2 + '</span>' +
+          '<span style="color:' + c2 + '">' + s3 + s4 + '</span>';
+      }
+
+      async function derive() {
+        const pw = $("#pw").value.normalize("NFC");
+        const name = $("#name").value.normalize("NFC").toLowerCase().trim();
+        const site = $("#site").value.normalize("NFC").toLowerCase().trim();
+
+        if (!pw || !name || !site) {
+          showError("All fields are required.");
+          return;
+        }
+
+        $("#btn").disabled = true;
+        $("#btn").innerHTML = '<span class="spinner"></span>Deriving...';
+        $("#err").classList.add("hide");
+        $("#out").classList.add("hide");
+
+        try {
+          if (derivedSeed) derivedSeed.fill(0);
+
+          const salt = buildSalt(name, site);
+          const seed = await deriveKey(pw, salt);
+          derivedSeed = seed;
+          cachedB32 = base32Encode(seed);
+          hmacKey = await crypto.subtle.importKey(
+            "raw", seed, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
           );
+          lastCounter = 0;
 
-        const a = shares[0],
-          b = shares[1];
-        if (a.y.length !== b.y.length)
-          throw new Error("Share length mismatch (don’t mix runs).");
-        const x1 = a.x,
-          x2 = b.x;
-        if (!x1 || !x2 || x1 === x2) throw new Error("Bad share indices.");
+          $("#pw").value = "";
+          $("#identicon").textContent = "";
+          // Seed NOT written to DOM until Show seed is clicked
+          $("#seedVal").textContent = "";
 
-        const out = new Uint8Array(a.y.length);
-        for (let i = 0; i < out.length; i++)
-          out[i] = lagrangeAtZero(x1, a.y[i], x2, b.y[i]);
-        return out.buffer; // 32 bytes
-      }
-
-      // ----- decrypt essentials / lifeboat -----
-      async function decryptEssentials(mkey) {
-        setStatus("Fetching essentials…");
-        const b = await fetchOrFile($("#urlEss"), $("#fileEss"));
-        let j;
-        try {
-          j = JSON.parse(new TextDecoder().decode(b));
-        } catch (e) {
-          throw new Error("essentials not JSON");
-        }
-        if (j.v !== 1) throw new Error("Unsupported essentials version");
-        const key = await crypto.subtle.importKey(
-          "raw",
-          mkey,
-          { name: "AES-GCM" },
-          false,
-          ["decrypt"]
-        );
-        const pt = await aesDec(key, b64ToBuf(j.nonce), b64ToBuf(j.ct));
-        return new TextDecoder().decode(pt);
-      }
-
-      async function decryptLifeboat(mkey) {
-        setStatus("Fetching lifeboat…");
-        const b = await fetchOrFile($("#urlLB"), $("#fileLB"));
-        let j;
-        try {
-          j = JSON.parse(new TextDecoder().decode(b));
-        } catch (e) {
-          throw new Error("lifeboat not JSON");
-        }
-        if (j.v !== 1) throw new Error("Unsupported lifeboat version");
-        const key = await crypto.subtle.importKey(
-          "raw",
-          mkey,
-          { name: "AES-GCM" },
-          false,
-          ["decrypt"]
-        );
-        const pt = await aesDec(key, b64ToBuf(j.nonce), b64ToBuf(j.ct));
-        const blob = new Blob([pt], { type: "application/octet-stream" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "lifeboat.tgz";
-        a.click();
-        setStatus("Downloaded lifeboat.tgz. Clean up after yourself.", "ok");
-      }
-
-      // ----- UI actions -----
-      $("#btnEss").addEventListener("click", async () => {
-        try {
-          $("#out").classList.add("hide");
-          setStatus("Starting…");
-          const mkey = await recoverMasterKeyFromAnyTwo();
-          const txt = await decryptEssentials(mkey);
+          await refreshCode();
           $("#out").classList.remove("hide");
-          $("#ess").textContent = txt;
-          setStatus("Essentials recovered.", "ok");
+          $("#notice").classList.remove("hide");
+
+          if (refreshInterval) clearInterval(refreshInterval);
+          refreshInterval = setInterval(refreshCode, 1000);
+          resetClearTimer();
         } catch (e) {
-          setStatus(e.message, "err");
+          showError("Derivation failed: " + e.message);
+        } finally {
+          $("#btn").disabled = false;
+          $("#btn").textContent = "Derive";
         }
+      }
+
+      function showError(msg) {
+        $("#err").textContent = msg;
+        $("#err").classList.remove("hide");
+      }
+
+      // Lazy seed display: only populate DOM when toggled visible
+      $("#seedToggle").addEventListener("click", () => {
+        const box = $("#seedBox");
+        const showing = box.classList.contains("hide");
+        if (showing && cachedB32) {
+          $("#seedVal").textContent = cachedB32;
+        } else {
+          $("#seedVal").textContent = "";
+        }
+        box.classList.toggle("hide");
+        $("#seedToggle").textContent = showing ? "Hide seed" : "Show seed";
       });
 
-      $("#btnLB").addEventListener("click", async () => {
-        try {
-          setStatus("Starting…");
-          const mkey = await recoverMasterKeyFromAnyTwo();
-          await decryptEssentials(mkey); // sanity step
-          await decryptLifeboat(mkey);
-        } catch (e) {
-          setStatus(e.message, "err");
-        }
+      function clearAll() {
+        if (derivedSeed) derivedSeed.fill(0);
+        derivedSeed = null;
+        cachedB32 = null; // JS strings are immutable; GC will collect. Cannot zero.
+        hmacKey = null; // CryptoKey internals managed by browser; non-extractable.
+        lastCounter = 0;
+        if (refreshInterval) clearInterval(refreshInterval);
+        refreshInterval = null;
+        if (autoClearTimer) { clearTimeout(autoClearTimer); autoClearTimer = null; }
+        $("#pw").value = "";
+        $("#name").value = "";
+        $("#site").value = "";
+        $("#identicon").textContent = "";
+        $("#code").textContent = "";
+        $("#timer").textContent = "";
+        $("#bar").style.width = "0%";
+        $("#seedVal").textContent = "";
+        $("#seedBox").classList.add("hide");
+        $("#seedToggle").textContent = "Show seed";
+        $("#out").classList.add("hide");
+        $("#notice").classList.add("hide");
+        $("#err").classList.add("hide");
+      }
+
+      function resetClearTimer() {
+        if (autoClearTimer) clearTimeout(autoClearTimer);
+        autoClearTimer = setTimeout(clearAll, 300000);
+        lastResetTime = Date.now();
+      }
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden && derivedSeed) clearAll();
       });
+
+      window.addEventListener("beforeunload", clearAll);
+
+      // Throttled inactivity reset (max once per second)
+      ["mousemove", "keydown", "click", "touchstart"].forEach((evt) => {
+        document.addEventListener(evt, () => {
+          if (derivedSeed && Date.now() - lastResetTime > 1000) resetClearTimer();
+        });
+      });
+
+      $("#btn").addEventListener("click", derive);
+      $("#pw").addEventListener("input", updateIdenticon);
+      function onEnterDerive(e) {
+        if (e.key === "Enter" && !$("#btn").disabled) derive();
+      }
+      $("#pw").addEventListener("keydown", onEnterDerive);
+      $("#name").addEventListener("keydown", onEnterDerive);
+      $("#site").addEventListener("keydown", onEnterDerive);
     </script>
   </body>
 </html>
